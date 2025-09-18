@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>為老婆唱首歌 - 互動測驗</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .bg-warm-gradient {
+            background-image: linear-gradient(to bottom right, #f8f0e5, #e6d3b3);
+        }
+        .btn-option {
+            transition: all 0.3s ease;
+        }
+        .btn-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-warm-gradient min-h-screen flex items-center justify-center p-4">
+
+    <div id="quiz-container" class="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full text-center">
+        <h1 class="text-4xl font-bold text-gray-800 mb-6">為老婆唱首歌</h1>
+        <h2 class="text-2xl font-semibold text-gray-700 mb-8">互動測驗</h2>
+        
+        <!-- 測驗內容區塊 -->
+        <div id="quiz-content">
+            <!-- 問題將由 JavaScript 載入 -->
+        </div>
+
+        <!-- 結果顯示區塊 -->
+        <div id="result-container" class="mt-8 hidden">
+            <p id="result-text" class="text-xl text-gray-600 mb-4"></p>
+            <button id="next-btn" class="bg-amber-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-amber-700 transition-colors">
+                下一題
+            </button>
+        </div>
+
+        <!-- 結束訊息區塊 -->
+        <div id="end-container" class="mt-8 hidden">
+            <p class="text-2xl font-semibold text-gray-700 mb-4">測驗結束！</p>
+            <p class="text-lg text-gray-600">感謝你與我們一起重溫這段溫暖的故事。</p>
+        </div>
+    </div>
+
+    <script>
+        // 測驗問題與選項設定
+        const questions = [
+            {
+                question: "在Marion生病後，Arthur如何看待她的合唱團？",
+                options: [
+                    { text: "這很愚蠢，只想遠離合唱團。", result: "你選擇了對人事物充滿抗拒的氛圍。Arthur一開始的心情正是如此，他用疏離來保護自己。", mood: "憤怒與不解" },
+                    { text: "雖然不情願，但為了Marion，他願意勉強接受。", result: "你選擇了充滿無奈與溫柔的氛圍。這份愛讓他願意妥協，即使感到彆扭，也默默支持。", mood: "無奈與溫柔" },
+                    { text: "他覺得這是一個有趣的團體，甚至想加入。", result: "你選擇了樂觀與開放的氛圍。這正是合唱團最終帶給他的力量，讓他願意嘗試新的事物。", mood: "樂觀與開放" }
+                ]
+            },
+            {
+                question: "當Arthur面對Marion的病情時，他如何應對？",
+                options: [
+                    { text: "他盡可能地照顧她，但心裡充滿了絕望。", result: "你選擇了悲傷與掙扎的氛圍。他的愛很深，但同時也無法承受失去的痛苦，這份掙扎讓觀眾心疼。", mood: "悲傷與掙扎" },
+                    { text: "他透過參加合唱團來轉移注意力，尋找新的寄託。", result: "你選擇了轉變與成長的氛圍。這是他療癒自己的方式，在音樂與團體中找到力量，重新面對生活。", mood: "轉變與成長" },
+                    { text: "他逃避現實，不願面對她的脆弱。", result: "你選擇了逃避與脆弱的氛圍。他的冷漠其實是無法面對內心的恐懼，這份脆弱是電影中一個重要的轉折。", mood: "逃避與脆弱" }
+                ]
+            },
+            {
+                question: "最終，Arthur如何展現他對Marion的愛？",
+                options: [
+                    { text: "他承諾永遠不會忘記她，並獨自生活。", result: "你選擇了孤獨但深情的氛圍。他對她的愛沒有結束，只是換了一種方式繼續，這份孤獨顯得格外感人。", mood: "孤獨與深情" },
+                    { text: "他選擇在合唱團的比賽中為她演唱一首歌。", result: "你選擇了溫馨、感動且充滿希望的氛圍。這是他為她做的最後一件事，也是最美的一件事，他用歌聲表達了無法言說的愛。", mood: "溫馨與感動" },
+                    { text: "他告訴Marion他很後悔沒有早點加入合唱團。", result: "你選擇了內疚與悔恨的氛圍。他的心意雖然真誠，但電影中的Arthur最終用行動而非言語來證明，這是他最大的轉變。", mood: "內疚與悔恨" }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        const quizContent = document.getElementById('quiz-content');
+        const resultContainer = document.getElementById('result-container');
+        const resultText = document.getElementById('result-text');
+        const nextBtn = document.getElementById('next-btn');
+        const endContainer = document.getElementById('end-container');
+
+        // 顯示當前問題
+        function displayQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                // 測驗結束
+                quizContent.innerHTML = '';
+                resultContainer.classList.add('hidden');
+                endContainer.classList.remove('hidden');
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // 建立問題標題
+            const questionTitle = document.createElement('h3');
+            questionTitle.classList.add('text-lg', 'font-medium', 'text-gray-800', 'mb-6');
+            questionTitle.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            
+            // 建立選項按鈕
+            const optionsDiv = document.createElement('div');
+            optionsDiv.classList.add('space-y-4');
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.classList.add('btn-option', 'w-full', 'py-4', 'px-6', 'rounded-full', 'bg-amber-100', 'text-gray-800', 'font-semibold', 'hover:bg-amber-200');
+                button.textContent = option.text;
+                button.onclick = () => handleAnswer(index);
+                optionsDiv.appendChild(button);
+            });
+
+            // 清空並載入新內容
+            quizContent.innerHTML = '';
+            quizContent.appendChild(questionTitle);
+            quizContent.appendChild(optionsDiv);
+            resultContainer.classList.add('hidden');
+        }
+
+        // 處理答案選擇
+        function handleAnswer(selectedIndex) {
+            const currentQuestion = questions[currentQuestionIndex];
+            const selectedOption = currentQuestion.options[selectedIndex];
+            
+            // 顯示結果
+            resultText.textContent = selectedOption.result;
+            resultContainer.classList.remove('hidden');
+            
+            // 隱藏選項按鈕
+            const optionsDiv = quizContent.querySelector('div.space-y-4');
+            optionsDiv.classList.add('hidden');
+        }
+
+        // 處理下一題按鈕
+        nextBtn.onclick = () => {
+            currentQuestionIndex++;
+            // 隱藏結果區塊
+            resultContainer.classList.add('hidden');
+            // 重新顯示選項按鈕
+            const optionsDiv = quizContent.querySelector('div.space-y-4');
+            if (optionsDiv) {
+                optionsDiv.classList.remove('hidden');
+            }
+            displayQuestion();
+        };
+
+        // 初始載入第一個問題
+        displayQuestion();
+    </script>
+
+</body>
+</html>
